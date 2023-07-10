@@ -1,0 +1,23 @@
+{
+    "name": "disbotter",
+    "version": "0.0.1",
+    "description": "Basic framework for building Discord Bots in TypeScript",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "prepare": "npm run build"
+    },
+    "keywords": [],
+    "author": "olix3001",
+    "license": "ISC",
+    "files": [
+        "dist"
+    ],
+    "devDependencies": {
+        "typescript": "^5.1.6"
+    },
+    "dependencies": {
+        "discord.js": "^14.11.0"
+    }
+}
