@@ -25,6 +25,7 @@
         "discord-api-types": "^0.37.48",
         "discord.js": "^14.11.0",
         "glob": "^10.3.3",
-        "signale": "^1.4.0"
+        "signale": "^1.4.0",
+        "yaml": "^2.3.1"
     }
 }

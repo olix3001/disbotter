@@ -3,6 +3,7 @@ import { BotClient } from "../client/BotClient";
 import { BaseHandler } from "../client/Handler";
 import { Command } from "./Command";
 import path from "path";
+import signale from "signale";
 
 export class CommandHandler extends BaseHandler<Command> {
     private readonly handlerFunction: (interaction: any) => Promise<void>;
@@ -25,20 +26,34 @@ export class CommandHandler extends BaseHandler<Command> {
             if (!command) return;
 
             try {
-                await command[0]?.handle(interaction);
+                await command[0]?._handleInteraction(interaction);
             } catch (error) {
-                console.error(error);
-                // TODO: Implement translation
+                signale.error(error);
+                const errorMessage = command[0]
+                    ?.getTranslator(interaction)
+                    .translate("internal.command.error");
                 if (interaction.replied || interaction.deferred) {
                     await interaction.followUp({
-                        content:
-                            "There was an error while executing this command!",
+                        content: errorMessage,
                         ephemeral: true,
                     });
                 } else {
                     await interaction.reply({
-                        content:
-                            "There was an error while executing this command!",
+                        content: errorMessage,
+                        ephemeral: true,
+                    });
+                }
+
+                if (this.client.config.enableDevMode) {
+                    let errorMsg = (error as any).toString();
+
+                    // Trim the error message to 1500 characters
+                    if (errorMsg.length > 1500) {
+                        errorMsg = errorMsg.slice(0, 1500);
+                    }
+
+                    await interaction.followUp({
+                        content: `Dev Mode Logs:\n\`\`\`js\n${errorMsg}\`\`\``,
                         ephemeral: true,
                     });
                 }
@@ -80,5 +95,9 @@ export class CommandHandler extends BaseHandler<Command> {
             (m) =>
                 m[0]?.builder.toJSON() as RESTPostAPIApplicationCommandsJSONBody
         );
+    }
+
+    public override handlerAdded(handler: Command): void {
+        handler.setClient(this.client);
     }
 }

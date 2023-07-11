@@ -9,7 +9,7 @@ export abstract class Event<N extends keyof ClientEvents> {
     public readonly name: string;
     public readonly once: boolean;
 
-    private client: BotClient | null = null;
+    protected readonly client: BotClient | null = null;
     private listener: (...args: any[]) => Promise<void>;
     private isAdded: boolean = false;
 
@@ -26,7 +26,7 @@ export abstract class Event<N extends keyof ClientEvents> {
                 );
                 return;
             }
-            this.execute(this.client, ...(args as ClientEvents[N]));
+            this.handle(...(args as ClientEvents[N]));
         };
     }
 
@@ -39,6 +39,7 @@ export abstract class Event<N extends keyof ClientEvents> {
             );
         }
 
+        // @ts-ignore
         this.client = client;
     }
 
@@ -78,8 +79,5 @@ export abstract class Event<N extends keyof ClientEvents> {
         this.isAdded = false;
     }
 
-    public abstract execute(
-        client: BotClient,
-        ...args: ClientEvents[N]
-    ): Promise<void>;
+    public abstract handle(...args: ClientEvents[N]): Promise<void>;
 }
