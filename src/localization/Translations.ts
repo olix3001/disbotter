@@ -91,11 +91,6 @@ export class Translations {
     public getRawLocaleString(locale: Locale, key: string): string {
         const translation = this.translations.get(locale);
         if (!translation) {
-            signale.error(
-                `Locale ${chalk.yellow(
-                    locale
-                )} is not loaded! Returning fallback...`
-            );
             return this.getRawLocaleString(this.fallbackLocale, key);
         }
 
@@ -107,7 +102,9 @@ export class Translations {
                 signale.error(
                     `Translation key ${chalk.yellow(
                         key
-                    )} is not present in ${chalk.yellow(locale)}!`
+                    )} is not present in ${chalk.yellow(
+                        locale
+                    )}! Using fallback...`
                 );
 
                 if (locale === this.fallbackLocale) {
