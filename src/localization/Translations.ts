@@ -15,7 +15,10 @@ export class LocalizedTranslations {
         this.translations = translations;
     }
 
-    public translate(key: string, placeholders: { [key: string]: any } = {}) {
+    public translate(
+        key: string,
+        placeholders: { [key: string]: any } = {}
+    ): string {
         return this.translations.getLocaleString(
             this.locale,
             key,
@@ -23,7 +26,7 @@ export class LocalizedTranslations {
         );
     }
 
-    public t(key: string, placeholders: { [key: string]: any } = {}) {
+    public t(key: string, placeholders: { [key: string]: any } = {}): string {
         return this.translate(key, placeholders);
     }
 
@@ -73,12 +76,8 @@ export class Translations {
         locale: Locale,
         key: string,
         placeholders: { [key: string]: any } = {}
-    ) {
+    ): string {
         const raw = this.getRawLocaleString(locale, key);
-
-        if (!raw) {
-            return undefined;
-        }
 
         // Replace placeholders
         let result = raw;
@@ -89,7 +88,7 @@ export class Translations {
         return result;
     }
 
-    public getRawLocaleString(locale: Locale, key: string): string | undefined {
+    public getRawLocaleString(locale: Locale, key: string): string {
         const translation = this.translations.get(locale);
         if (!translation) {
             signale.error(
@@ -108,10 +107,17 @@ export class Translations {
                 signale.error(
                     `Translation key ${chalk.yellow(
                         key
-                    )} is not present in ${chalk.yellow(
-                        locale
-                    )}! Returning fallback...`
+                    )} is not present in ${chalk.yellow(locale)}!`
                 );
+
+                if (locale === this.fallbackLocale) {
+                    throw new Error(
+                        `Translation key ${chalk.red(
+                            key
+                        )} is not present in ${chalk.red(locale)} (fallback)!`
+                    );
+                }
+
                 return this.getRawLocaleString(this.fallbackLocale, key);
             }
         }

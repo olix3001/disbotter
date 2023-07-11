@@ -16,3 +16,4 @@ Currently you need to figure out how to create bot yourself.
 -   [ ] Command permissions (roles)
 -   [x] Translations
 -   [ ] Custom interaction handling
+-   [ ] Hot reloading (for development)
