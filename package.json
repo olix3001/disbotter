@@ -4,6 +4,7 @@
     "description": "Basic framework for building Discord Bots in TypeScript",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
+    "type": "module",
     "scripts": {
         "build": "tsc",
         "prepare": "npm run build",
@@ -16,16 +17,18 @@
         "dist"
     ],
     "devDependencies": {
-        "nodemon": "^3.0.1",
-        "typescript": "^5.1.6"
+        "nodemon": "^3.0.1"
     },
     "dependencies": {
         "@types/signale": "^1.4.4",
         "chalk": "4.1.2",
+        "chokidar": "^3.5.3",
         "discord-api-types": "^0.37.48",
         "discord.js": "^14.11.0",
+        "execa": "^7.1.1",
         "glob": "^10.3.3",
         "signale": "^1.4.0",
+        "typescript": "^5.1.6",
         "yaml": "^2.3.1"
     }
 }

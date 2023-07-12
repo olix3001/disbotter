@@ -19,11 +19,14 @@ export class EventHandler extends BaseHandler<AnyEvent> {
     }
 
     countEvents(): number {
-        return this.loadedModules.map((m) => m.length).reduce((a, b) => a + b);
+        if (this.loadedModules.size === 0) return 0;
+        return this.loadedModules
+            .map((m) => (m.length > 0 ? m.length : 1))
+            .reduce((a, b) => a + b);
     }
 
     public getModuleID(module: AnyEvent): string {
-        return module.name;
+        return module.uniqueID;
     }
 
     public override handlerAdded(handler: AnyEvent): void {

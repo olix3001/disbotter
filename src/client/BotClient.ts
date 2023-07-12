@@ -4,6 +4,8 @@ import chalk from "chalk";
 import { EventHandler } from "../event/EventHandler.js";
 import { CommandHandler } from "../command/CommandHandler.js";
 import { Translations } from "../localization/Translations.js";
+import path from "path";
+import { execa } from "execa";
 
 /**
  * Bot client configuration.
@@ -23,6 +25,7 @@ export interface BotClientConfig extends ClientOptions {
 
     // This enables additional logging for debugging purposes.
     enableDevMode?: boolean;
+    enableHotReload?: boolean;
 }
 
 /**
@@ -71,5 +74,42 @@ export class BotClient extends Client {
         }
         await this.commandHandler.startHandler();
         signale.success("Command handler started!");
+
+        if (this.config.enableHotReload) {
+            signale.warn(
+                chalk.yellow(
+                    "Hot reload is enabled! This is not recommended for production use!"
+                )
+            );
+
+            this.commandHandler.startHotReload();
+            this.eventHandler.startHotReload();
+            this.translations.startHotReload();
+            this.startHotReloadTSC();
+        }
+    }
+
+    private async startHotReloadTSC(): Promise<void> {
+        const tscSignale = signale.scope("tsc");
+        tscSignale.info("Starting typescript compiler...");
+        // Run tsc --watch --preserveWatchOutput in background
+
+        const tsc = execa("npx", ["tsc", "--watch", "--preserveWatchOutput"], {
+            cwd: path.join(this.config.baseDir, ".."),
+        });
+
+        tsc.stdout?.on("data", (data: any) => {
+            tscSignale.info(data.toString().trim());
+        });
+
+        tsc.stderr?.on("data", (data: any) => {
+            tscSignale.error(data.toString().trim());
+        });
+
+        tsc.on("exit", (code: any) => {
+            tscSignale.error(`Exited with code ${code}`);
+        });
+
+        tscSignale.success("Typescript compiler started!");
     }
 }

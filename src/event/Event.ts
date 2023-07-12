@@ -8,6 +8,7 @@ export type AnyEvent = Event<keyof ClientEvents>;
 export abstract class Event<N extends keyof ClientEvents> {
     public readonly name: string;
     public readonly once: boolean;
+    public readonly uniqueID: string = this.constructor.name;
 
     protected readonly client: BotClient | null = null;
     private listener: (...args: any[]) => Promise<void>;
@@ -72,9 +73,7 @@ export abstract class Event<N extends keyof ClientEvents> {
             return;
         }
 
-        if (this.once) {
-            this.client?.removeListener(this.name, this.listener);
-        }
+        this.client?.removeListener(this.name, this.listener);
 
         this.isAdded = false;
     }

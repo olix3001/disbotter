@@ -1,6 +1,6 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
-import { LocalizedTranslations } from "../localization/Translations";
-import { BotClient } from "../client/BotClient";
+import { LocalizedTranslations } from "../localization/Translations.js";
+import { BotClient } from "../client/BotClient.js";
 
 export abstract class Command {
     public abstract readonly builder: SlashCommandBuilder;

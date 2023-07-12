@@ -2,9 +2,10 @@ import { Collection, Locale } from "discord.js";
 import YAML from "yaml";
 import fs from "fs";
 import path from "path";
-import { BotClient } from "../client/BotClient";
+import { BotClient } from "../client/BotClient.js";
 import signale from "signale";
 import chalk from "chalk";
+import chokidar from "chokidar";
 
 export class LocalizedTranslations {
     private readonly locale: Locale;
@@ -44,8 +45,63 @@ export class Translations {
     private readonly client: BotClient;
     private fallbackLocale: Locale = Locale.EnglishUS;
 
+    private static readonly hotReloadSignale = signale.scope("hot-reload");
+    private watcher: chokidar.FSWatcher | null = null;
+
     public constructor(client: BotClient) {
         this.client = client;
+    }
+
+    public startHotReload(): void {
+        this.watcher = chokidar.watch(
+            path.join(
+                this.client.config.baseDir,
+                this.client.config.localesDir || "../locales"
+            ),
+            {
+                persistent: true,
+            }
+        );
+
+        this.watcher.on("ready", () => {
+            Translations.hotReloadSignale.watch(
+                `Watching ${chalk.yellow(
+                    path.join(
+                        this.client.config.baseDir,
+                        this.client.config.localesDir || "../locales"
+                    )
+                )}`
+            );
+
+            if (!this.watcher) {
+                return;
+            }
+
+            this.watcher.on("change", async (path) => {
+                const locale = path
+                    .split("\\")
+                    .pop()
+                    ?.split("/")
+                    .pop()
+                    ?.split(".")
+                    .shift() as Locale;
+                await this.load(locale);
+                Translations.hotReloadSignale.complete(
+                    `Reloaded ${chalk.yellow(path.toString())}`
+                );
+            });
+
+            this.watcher.on("add", async (path) => {
+                const locale = path
+                    .split("\\")
+                    .pop()
+                    ?.split("/")
+                    .pop()
+                    ?.split(".")
+                    .shift() as Locale;
+                await this.load(locale);
+            });
+        });
     }
 
     public setFallbackLocale(locale: Locale): void {

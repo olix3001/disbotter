@@ -1,9 +1,10 @@
 import { RESTPostAPIApplicationCommandsJSONBody, Routes } from "discord.js";
-import { BotClient } from "../client/BotClient";
-import { BaseHandler } from "../client/Handler";
-import { Command } from "./Command";
+import { BotClient } from "../client/BotClient.js";
+import { BaseHandler } from "../client/Handler.js";
+import { Command } from "./Command.js";
 import path from "path";
 import signale from "signale";
+import chalk from "chalk";
 
 export class CommandHandler extends BaseHandler<Command> {
     private readonly handlerFunction: (interaction: any) => Promise<void>;
@@ -14,8 +15,7 @@ export class CommandHandler extends BaseHandler<Command> {
             path.join(
                 client.config.baseDir,
                 client.config.commandsDir || "commands"
-            ),
-            false
+            )
         );
 
         this.handlerFunction = async (interaction) => {
@@ -77,6 +77,38 @@ export class CommandHandler extends BaseHandler<Command> {
         await this.client.rest.put(
             Routes.applicationCommands(this.client.config.clientID as string),
             { body: this.getAllCommandsJSON() }
+        );
+    }
+
+    public async registerGlobalCommand(commandID: string): Promise<void> {
+        await this.client.rest.put(
+            Routes.applicationCommands(this.client.config.clientID as string),
+            { body: [this.loadedModules.get(commandID)?.[0]?.builder.toJSON()] }
+        );
+    }
+
+    public async updateDevCommand(commandID: string): Promise<void> {
+        for (const guildID in this.client.config.devGuilds) {
+            await this.registerGuildCommand(commandID, guildID);
+        }
+    }
+
+    public async registerGuildCommand(
+        commandID: string,
+        guildID: string
+    ): Promise<void> {
+        await this.client.rest.put(
+            Routes.applicationGuildCommands(
+                this.client.config.clientID as string,
+                guildID
+            ),
+            { body: [this.loadedModules.get(commandID)?.[0]?.builder.toJSON()] }
+        );
+
+        signale.info(
+            `Registered command ${chalk.yellow(
+                commandID
+            )} in guild ${chalk.yellow(guildID)}`
         );
     }
 
