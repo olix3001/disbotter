@@ -1,4 +1,8 @@
-import { RESTPostAPIApplicationCommandsJSONBody, Routes } from "discord.js";
+import {
+    Collection,
+    RESTPostAPIApplicationCommandsJSONBody,
+    Routes,
+} from "discord.js";
 import { BotClient } from "../client/BotClient.js";
 import { BaseHandler } from "../client/Handler.js";
 import { Command } from "./Command.js";
@@ -8,6 +12,7 @@ import chalk from "chalk";
 
 export class CommandHandler extends BaseHandler<Command> {
     private readonly handlerFunction: (interaction: any) => Promise<void>;
+    private devCommandCache: Collection<string, string> = new Collection();
 
     public constructor(client: BotClient) {
         super(
@@ -74,6 +79,7 @@ export class CommandHandler extends BaseHandler<Command> {
     }
 
     public async registerGlobalCommands(): Promise<void> {
+        signale.info("Registering global commands...");
         await this.client.rest.put(
             Routes.applicationCommands(this.client.config.clientID as string),
             { body: this.getAllCommandsJSON() }
@@ -88,7 +94,26 @@ export class CommandHandler extends BaseHandler<Command> {
     }
 
     public async updateDevCommand(commandID: string): Promise<void> {
-        for (const guildID in this.client.config.devGuilds) {
+        if (!this.client.started) return;
+        const cached = this.devCommandCache.get(commandID);
+        if (cached) {
+            if (
+                cached ===
+                JSON.stringify(
+                    this.loadedModules.get(commandID)?.[0]?.builder.toJSON()
+                )
+            )
+                return;
+        }
+
+        this.devCommandCache.set(
+            commandID,
+            JSON.stringify(
+                this.loadedModules.get(commandID)?.[0]?.builder.toJSON()
+            )
+        );
+
+        for (const guildID of this.client.config.devGuilds || []) {
             await this.registerGuildCommand(commandID, guildID);
         }
     }
@@ -123,13 +148,21 @@ export class CommandHandler extends BaseHandler<Command> {
     }
 
     public getAllCommandsJSON(): RESTPostAPIApplicationCommandsJSONBody[] {
-        return this.loadedModules.map(
-            (m) =>
-                m[0]?.builder.toJSON() as RESTPostAPIApplicationCommandsJSONBody
-        );
+        return this.loadedModules.map((m) => {
+            if (this.client.config.enableHotReload) {
+                this.devCommandCache.set(
+                    m[0]?.builder.name as string,
+                    JSON.stringify(m[0]?.builder.toJSON())
+                );
+            }
+            return m[0]?.builder.toJSON() as RESTPostAPIApplicationCommandsJSONBody;
+        });
     }
 
     public override handlerAdded(handler: Command): void {
         handler.setClient(this.client);
+        if (this.client.config.enableHotReload) {
+            this.updateDevCommand(handler.builder.name);
+        }
     }
 }

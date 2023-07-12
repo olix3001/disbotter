@@ -41,6 +41,8 @@ export class BotClient extends Client {
     commandHandler: CommandHandler;
     translations: Translations;
 
+    started: boolean = false;
+
     public constructor(config: BotClientConfig) {
         super(config as ClientOptions);
         this.config = config;
@@ -87,6 +89,8 @@ export class BotClient extends Client {
             this.translations.startHotReload();
             this.startHotReloadTSC();
         }
+
+        this.started = true;
     }
 
     private async startHotReloadTSC(): Promise<void> {
