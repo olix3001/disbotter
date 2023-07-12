@@ -39,7 +39,7 @@ export class BotClient extends Client {
 
     eventHandler: EventHandler;
     commandHandler: CommandHandler;
-    translations: Translations;
+    public translations: Translations;
 
     started: boolean = false;
 

@@ -19,11 +19,13 @@ export abstract class Command {
     public abstract handle(
         t: LocalizedTranslations,
         interaction: CommandInteraction
-    ): void;
+    ): Promise<void>;
 
-    public _handleInteraction(interaction: CommandInteraction): void {
+    public async _handleInteraction(
+        interaction: CommandInteraction
+    ): Promise<void> {
         const t = this.getTranslator(interaction);
-        this.handle(t, interaction);
+        await this.handle(t, interaction);
     }
 
     public getTranslator(
